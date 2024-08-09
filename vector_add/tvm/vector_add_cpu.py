@@ -25,7 +25,7 @@ def ref_vector_add(a, b, c):
     c[:] = a + b
 
 
-def test1():
+def run_on_cpu():
     a_np = np.ones(N, dtype=np.float32)
     b_np = np.linspace(start=0.0, stop=1.0 * (N - 1), num=N, dtype=np.float32)
     c_np = np.zeros_like(a_np)
@@ -44,6 +44,8 @@ def test1():
 
     func_vec_add = rt_lib["vector_add"]
 
+    print(f"Running vector add on CPU with vector size {N}")
+
     func_vec_add(a, b, c)
 
     ref_vector_add(a_np, b_np, c_np)
@@ -53,4 +55,4 @@ def test1():
 
 
 if __name__ == "__main__":
-    test1()
+    run_on_cpu()
