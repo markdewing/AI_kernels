@@ -11,24 +11,6 @@ def ref_vector_add(a, b, c):
     c[:] = a + b
 
 
-# Calibrate loop by running for 'cutoff' seconds
-cutoff = 0.1
-
-
-def compute_nloop(func):
-    start = timeit.default_timer()
-    niter = 0
-    while True:
-        func()
-        end = timeit.default_timer()
-        elapsed = end - start
-        niter += 1
-        if elapsed >= cutoff:
-            break
-
-    return niter
-
-
 def run_on_cpu():
     print("# TVM version: ", tvm.__version__)
     print("# CPU")
@@ -65,17 +47,15 @@ def run_on_cpu():
         func_vec_add = rt_lib["vector_add"]
         func_vec_add(a, b, c)
 
-        loops_per_cutoff = compute_nloop(lambda: func_vec_add(a, b, c))
-        nloop = 10 * loops_per_cutoff
+        timer = timeit.Timer(lambda: func_vec_add(a, b, c))
 
-        start = timeit.default_timer()
-        for it in range(nloop):
-            func_vec_add(a, b, c)
-        end = timeit.default_timer()
-        # print("c", c[0:10])
+        loops_per_cutoff, elapsed_calibration = timer.autorange()
+        # Compute number of loops to run for about one second
+        nloop = max(1, int(loops_per_cutoff / elapsed_calibration))
+
+        elapsed = timer.timeit(number=nloop)
 
         nbytes = N * 4  # sizeof(np.float32) = 4
-        elapsed = end - start
         elapsed_per_loop = elapsed / nloop
 
         bw = 3 * nbytes / elapsed_per_loop  # 2 reads and 1 write
