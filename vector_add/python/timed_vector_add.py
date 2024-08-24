@@ -8,24 +8,6 @@ def vector_add(a, b, c):
     c[:] = a + b
 
 
-# Calibrate loop timing by running for 'cutoff' seconds
-cutoff = 0.1
-
-
-def compute_nloop(func):
-    start = timeit.default_timer()
-    niter = 0
-    while True:
-        func()
-        end = timeit.default_timer()
-        elapsed = end - start
-        niter += 1
-        if elapsed >= cutoff:
-            break
-
-    return niter
-
-
 print("# Numpy version: ", np.__version__)
 print(
     f"# {'N':^10}  {'nloop':^10}  {'size(MB)':12} {'elapsed time(s)':16} {'kernel time(us)':16}  {'BW(GB/s)':10}"
@@ -43,22 +25,19 @@ for n in pts:
     # print('b',b)
     # print('a',a)
 
-    loops_per_cutoff = compute_nloop(lambda: vector_add(a, b, c))
+    timer = timeit.Timer(lambda: vector_add(a, b, c))
+
+    loops_per_cutoff, elapsed_calibration = timer.autorange()
     # Compute number of loops to run for about one second
-    nloop = 10 * loops_per_cutoff
+    nloop = max(1, int(loops_per_cutoff / elapsed_calibration))
 
     # print(f"Running vector add with vector size {n}")
-    # out = timeit.timeit(lambda : vector_add(a,b,c))
-    start = timeit.default_timer()
-    for it in range(nloop):
-        vector_add(a, b, c)
-    end = timeit.default_timer()
+    elapsed = timer.timeit(number=nloop)
     # print("c", c[0:10])
 
     # Size of one array
     nbytes = n * 4  # sizeof(np.float32) = 4
 
-    elapsed = end - start
     elapsed_per_loop = elapsed / nloop
 
     bw = 3 * nbytes / elapsed_per_loop  # 2 reads and 1 write
