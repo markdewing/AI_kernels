@@ -36,25 +36,6 @@ def add(x: torch.Tensor, y: torch.Tensor, output: torch.Tensor):
     torch.cuda.synchronize()
 
 
-# Calibrate loop timing by running for 'cutoff' seconds
-cutoff = 0.1
-
-
-def compute_nloop(func):
-    start = timeit.default_timer()
-    niter = 0
-    while True:
-        func()
-        torch.cuda.synchronize()
-        end = timeit.default_timer()
-        elapsed = end - start
-        niter += 1
-        if elapsed >= cutoff:
-            break
-
-    return niter
-
-
 def scan_gpu():
     print("# Triton version: ", triton.__version__)
     print("# GPU")
@@ -71,19 +52,24 @@ def scan_gpu():
 
         c = torch.empty_like(a)
 
-        loops_per_cutoff = compute_nloop(lambda: add(a, b, c))
-        # Compute number of loops to run for about one second
-        nloop = 10 * loops_per_cutoff
+        timer = timeit.Timer(lambda: add(a, b, c))
 
-        start = timeit.default_timer()
-        for it in range(nloop):
-            add(a, b, c)
+        loops_per_cutoff, elapsed_calibration = timer.autorange()
+        # Compute number of loops to run for about one second
+        nloop = max(1, int(loops_per_cutoff / elapsed_calibration))
+
+        elapsed = timer.timeit(number=nloop)
+
+        # Might need this loop for final synchronize
+        # start = timeit.default_timer()
+        # for it in range(nloop):
+        #    add(a, b, c)
         # torch.cuda.synchronize()
-        end = timeit.default_timer()
+        # end = timeit.default_timer()
+        # elapsed = end - start
 
         nbytes = n * 4  # sizeof(np.float32) = 4
 
-        elapsed = end - start
         elapsed_per_loop = elapsed / nloop
 
         bw = 3 * nbytes / elapsed_per_loop  # 2 reads and 1 write
