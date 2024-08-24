@@ -3,24 +3,6 @@ import torch
 import timeit
 import numpy as np
 
-# Calibrate loop timing by running for 'cutoff' seconds
-cutoff = 0.1
-
-
-def compute_nloop(func):
-    start = timeit.default_timer()
-    niter = 0
-    while True:
-        func()
-        torch.cuda.synchronize()
-        end = timeit.default_timer()
-        elapsed = end - start
-        niter += 1
-        if elapsed >= cutoff:
-            break
-
-    return niter
-
 
 # @torch.jit.script
 def vector_add(a, b, c):
@@ -36,16 +18,17 @@ def run_on_cpu(N):
 
     # c = a + b
 
-    loops_per_cutoff = compute_nloop(lambda: vector_add(a, b, c))
-    nloop = 10 * loops_per_cutoff
+    timer = timeit.Timer(lambda: vector_add(a, b, c))
 
-    start = timeit.default_timer()
-    for it in range(nloop):
-        vector_add(a, b, c)
-    end = timeit.default_timer()
+    loops_per_cutoff, elapsed_calibration = timer.autorange()
+    # Compute number of loops to run for about one second
+    nloop = max(1, int(loops_per_cutoff / elapsed_calibration))
+
+    # print(f"Running vector add with vector size {n}")
+    elapsed = timer.timeit(number=nloop)
 
     nbytes = N * 4
-    elapsed = end - start
+
     elapsed_per_loop = elapsed / nloop
 
     bw = 3 * nbytes / elapsed_per_loop
@@ -82,17 +65,24 @@ def run_on_gpu(N):
 
     # print(f"Running vector add on GPU with vector size {N}")
 
-    loops_per_cutoff = compute_nloop(lambda: vector_add(a, b, c))
-    nloop = 10 * loops_per_cutoff
+    timer = timeit.Timer(lambda: vector_add(a, b, c))
 
-    start = timeit.default_timer()
-    for it in range(nloop):
-        vector_add(a, b, c)
-    torch.cuda.synchronize()
-    end = timeit.default_timer()
+    loops_per_cutoff, elapsed_calibration = timer.autorange()
+    # Compute number of loops to run for about one second
+    nloop = max(1, int(loops_per_cutoff / elapsed_calibration))
+
+    # print(f"Running vector add with vector size {n}")
+    elapsed = timer.timeit(number=nloop)
+
+    # Might need to use this loop to include final synchronization
+    # start = timeit.default_timer()
+    # for it in range(nloop):
+    #    vector_add(a, b, c)
+    # torch.cuda.synchronize()
+    # end = timeit.default_timer()
+    # elapsed = end - start
 
     nbytes = N * 4
-    elapsed = end - start
     elapsed_per_loop = elapsed / nloop
 
     bw = 3 * nbytes / elapsed_per_loop
