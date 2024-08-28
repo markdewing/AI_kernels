@@ -16,10 +16,11 @@ def run_on_gpu():
     print("# TVM version: ", tvm.__version__)
     print("# GPU")
     print(
-        f"# {'N':^10}  {'nloop':^10}  {'size(MB)':12} {'elapsed time(s)':16} {'kernel time(us)':16}  {'BW(GB/s)':10}"
+        f"# {'N':^10}  {'nloop':^10}  {'size(MB)':12} {'elapsed time(s)':16} {'kernel time(us)':16}  {'BW(GB/s)':10}",
+        flush=True,
     )
 
-    pts = np.logspace(2, 9, num=20, dtype=np.int64)
+    pts = np.logspace(2, 8.4, num=40, dtype=np.int64)
     for N in pts:
 
         @tvm.script.ir_module
@@ -59,13 +60,25 @@ def run_on_gpu():
 
         func_vec_add(a, b, c)
 
-        timer = timeit.Timer(lambda: func_vec_add(a, b, c))
+        def vec_add_sync(a, b, c):
+            func_vec_add(a, b, c)
+            tvm.cuda(0).sync()
+
+        # timer = timeit.Timer(lambda: func_vec_add(a, b, c))
+        timer = timeit.Timer(lambda: vec_add_sync(a, b, c))
 
         loops_per_cutoff, elapsed_calibration = timer.autorange()
         # Compute number of loops to run for about one second
         nloop = max(1, int(loops_per_cutoff / elapsed_calibration))
 
-        elapsed = timer.timeit(number=nloop)
+        # elapsed = timer.timeit(number=nloop)
+        # Use this loop instead of timeit to include final synchronization
+        start = timeit.default_timer()
+        for it in range(nloop):
+            func_vec_add(a, b, c)
+        tvm.cuda(0).sync()
+        end = timeit.default_timer()
+        elapsed = end - start
 
         nbytes = N * 4  # sizeof(np.float32) = 4
 
@@ -74,7 +87,8 @@ def run_on_gpu():
         bw = 3 * nbytes / elapsed_per_loop  # 2 reads and 1 write
 
         print(
-            f"{N:10} {nloop:10} {3*nbytes/1e6:12.4g} {elapsed:16.3f} {elapsed_per_loop*1e6:16.4g} {bw/1e9:10.3f}"
+            f"{N:10} {nloop:10} {3*nbytes/1e6:12.4g} {elapsed:16.3f} {elapsed_per_loop*1e6:16.4g} {bw/1e9:10.3f}",
+            flush=True,
         )
 
 

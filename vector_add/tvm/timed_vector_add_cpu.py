@@ -18,7 +18,7 @@ def run_on_cpu():
         f"# {'N':^10}  {'nloop':^10}  {'size(MB)':12} {'elapsed time(s)':16} {'kernel time(us)':16}  {'BW(GB/s)':10}"
     )
 
-    pts = np.logspace(2, 9, num=20, dtype=np.int64)
+    pts = np.logspace(2, 9, num=40, dtype=np.int64)
     for N in pts:
 
         @tvm.script.ir_module
@@ -61,7 +61,7 @@ def run_on_cpu():
         bw = 3 * nbytes / elapsed_per_loop  # 2 reads and 1 write
 
         print(
-            f"{N:10} {nloop:10} {3*nbytes/1e6:12.4g} {elapsed:16.3f} {elapsed_per_loop*1e6:16.4g} {bw/1e9:10.3f}"
+            f"{N:10} {nloop:10} {3*nbytes/1e6:12.4g} {elapsed:16.3f} {elapsed_per_loop*1e6:16.4g} {bw/1e9:10.3f}", flush=True
         )
 
 
