@@ -43,6 +43,7 @@ for n in pts:
     bw = 3 * nbytes / elapsed_per_loop  # 2 reads and 1 write
 
     print(
-        f"{n:10} {nloop:10} {3*nbytes/1e6:12.4g} {elapsed:16.3f} {elapsed_per_loop*1e6:16.4g} {bw/1e9:10.3f}"
+        f"{n:10} {nloop:10} {3*nbytes/1e6:12.4g} {elapsed:16.3f} {elapsed_per_loop*1e6:16.4g} {bw/1e9:10.3f}",
+        flush=True
     )
     # np.testing.assert_allclose(c, c_expect)
