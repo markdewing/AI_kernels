@@ -9,6 +9,12 @@ def vector_add(a, b, c):
     c[:] = a + b
 
 
+# call a function followed by a synchronization
+def sync_wrapper(func, *args):
+    func(*args)
+    torch.cuda.synchronize()
+
+
 def run_on_cpu(N):
     a = torch.ones(N)
     b = torch.linspace(0.0, 1.0 * (N - 1), N)
@@ -17,8 +23,9 @@ def run_on_cpu(N):
     # print(f"Running vector add on CPU with vector size {N}")
 
     # c = a + b
+    vec_add_compiled = torch.compile(vector_add)
 
-    timer = timeit.Timer(lambda: vector_add(a, b, c))
+    timer = timeit.Timer(lambda: vec_add_compiled(a, b, c))
 
     loops_per_cutoff, elapsed_calibration = timer.autorange()
     # Compute number of loops to run for about one second
@@ -34,7 +41,8 @@ def run_on_cpu(N):
     bw = 3 * nbytes / elapsed_per_loop
 
     print(
-        f"{N:10} {nloop:10} {3*nbytes/1e6:12.4g} {elapsed:16.3f} {elapsed_per_loop*1e6:16.4g} {bw/1e9:10.3f}"
+        f"{N:10} {nloop:10} {3*nbytes/1e6:12.4g} {elapsed:16.3f} {elapsed_per_loop*1e6:16.4g} {bw/1e9:10.3f}",
+        flush=True,
     )
 
     c_expect = torch.linspace(1.0, 1.0 * N, N)
@@ -63,24 +71,29 @@ def run_on_gpu(N):
     b = torch.linspace(0.0, 1.0 * (N - 1), N, device="cuda")
     c = torch.empty(N, device="cuda")
 
+    vec_add_compiled = torch.compile(vector_add)
     # print(f"Running vector add on GPU with vector size {N}")
+    # vector_add(a,b,c)
+    vec_add_compiled(a, b, c)
 
-    timer = timeit.Timer(lambda: vector_add(a, b, c))
+    # timer = timeit.Timer(lambda: vector_add_with_sync(a, b, c))
+    timer = timeit.Timer(lambda: sync_wrapper(vec_add_compiled, a, b, c))
 
     loops_per_cutoff, elapsed_calibration = timer.autorange()
     # Compute number of loops to run for about one second
     nloop = max(1, int(loops_per_cutoff / elapsed_calibration))
 
     # print(f"Running vector add with vector size {n}")
-    elapsed = timer.timeit(number=nloop)
+    # elapsed = timer.timeit(number=nloop)
 
-    # Might need to use this loop to include final synchronization
-    # start = timeit.default_timer()
-    # for it in range(nloop):
-    #    vector_add(a, b, c)
-    # torch.cuda.synchronize()
-    # end = timeit.default_timer()
-    # elapsed = end - start
+    # Need to use this loop to include final synchronization
+    start = timeit.default_timer()
+    for it in range(nloop):
+        vec_add_compiled(a, b, c)
+        # vector_add(a, b, c)
+    torch.cuda.synchronize()
+    end = timeit.default_timer()
+    elapsed = end - start
 
     nbytes = N * 4
     elapsed_per_loop = elapsed / nloop
@@ -88,7 +101,8 @@ def run_on_gpu(N):
     bw = 3 * nbytes / elapsed_per_loop
 
     print(
-        f"{N:10} {nloop:10} {3*nbytes/1e6:12.4g} {elapsed:16.3f} {elapsed_per_loop*1e6:16.4g} {bw/1e9:10.3f}"
+        f"{N:10} {nloop:10} {3*nbytes/1e6:12.4g} {elapsed:16.3f} {elapsed_per_loop*1e6:16.4g} {bw/1e9:10.3f}",
+        flush=True,
     )
 
     c_expect = torch.linspace(1.0, 1.0 * N, N)
@@ -102,10 +116,11 @@ def scan_on_gpu():
     print("# Torch version: ", torch.__version__)
     print("# GPU")
     print(
-        f"# {'N':^10}  {'nloop':^10}  {'size(MB)':12} {'elapsed time(s)':16} {'kernel time(us)':16}  {'BW(GB/s)':10}"
+        f"# {'N':^10}  {'nloop':^10}  {'size(MB)':12} {'elapsed time(s)':16} {'kernel time(us)':16}  {'BW(GB/s)':10}",
+        flush=True,
     )
 
-    pts = np.logspace(2, 9, num=20, dtype=np.int64)
+    pts = np.logspace(2, 8.5, num=40, dtype=np.int64)
     # for N in [100,1000,10000,100_000,int(1e6),int(1e7),int(1e8)]:
     for N in pts:
         run_on_gpu(N)
