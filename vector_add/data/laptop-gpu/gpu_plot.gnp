@@ -1,0 +1,34 @@
+
+set style data lp
+#set style data l
+set logscale x
+set xlabel "Total vector data (MB)"
+set ylabel "Bandwidth (GB/s)"
+set title "Vector add GPU bandwidth on 4060 (mobile)"
+
+set pointsize 0.50
+plot  \
+     'cuda_bs128.dat' u 3:6 title "CUDA" lt 8 pt 8,   \
+     'tvm_gpu2.dat' u 3:6 title "TVM" lt 4 pt 7, \
+     'jax_gpu4.dat' u 3:6 title "Jax" lt 3 pt 5, \
+     'pytorch_gpu_compiled.dat' u 3:6 title "PyTorch" lt 1 pt 4, \
+     'triton_gpu2.dat' u 3:6 title "Triton" lt 2 pt 14
+
+# L1 - 128KB/SM
+set arrow from 0.128, graph 0 to 0.128, graph 1 nohead dt 2
+set label "  L1" at 0.128, 300
+# L2 - 32MB
+set arrow from 32, graph 0 to 32, graph 1 nohead dt 2
+set label "  L2" at 32, 50
+
+# max DRAM bandwidth - 256 GB/s
+set arrow from 32,256 to 4000,256, graph 1 nohead dt 4
+set label "DRAM BW" at 200,300
+
+#set term "svg"
+#set output "bandwidth_gpu.svg"
+
+replot
+
+pause -1
+ 

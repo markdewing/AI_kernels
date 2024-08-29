@@ -1,0 +1,33 @@
+
+set style data lp
+set logscale x
+set xlabel "Vector size (MB)"
+set ylabel "Bandwidth (GB/s)"
+set title "Vector add CPU bandwidth with 1 thread"
+
+set pointsize 0.50
+
+plot 'numpy_1thr_pcore.dat' u 3:6  title "Numpy" lt 1 pt 4, \
+     'pytorch_1thr_pcore.dat' u 3:6 title "PyTorch" lt 2 pt 10, \
+     'pytorch_cpu_compiled.dat' u 3:6 title "PyTorch compiled" lt 3 pt 8, \
+     'jax_1thr_pcore.dat' u 3:6 title "Jax" lt 12 pt 12, \
+     'tvm_1thr_pcore.dat' u 3:6 title "TVM" lt 7 pt 6
+
+# L1 - 80KB/core
+set arrow from 0.080, graph 0 to 0.080, graph 1 nohead dt 2
+set label "  L1" at 0.08, 10
+# L2 - 2MB/core
+set arrow from 2, graph 0 to 2, graph 1 nohead dt 2
+set label "  L2" at 2, 10
+# L3 - 36MB (shared)
+set arrow from 36, graph 0 to 36, graph 1 nohead dt 2
+set label "  L3" at 36, 10
+
+set term "svg"
+set output "bandwidth_cpu.svg"
+
+
+replot
+
+pause -1
+ 
