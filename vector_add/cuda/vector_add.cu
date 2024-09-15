@@ -63,6 +63,9 @@ int main() {
   int blockSize = 1024;
   int gridSize = (int)(double(N) / blockSize) + 1;
 
+  // Warm up run (takes time to move the kernel to the device)
+  vector_add<<<gridSize, blockSize>>>(device_a, device_b, device_c, N);
+
   cudaEventRecord(start);
   vector_add<<<gridSize, blockSize>>>(device_a, device_b, device_c, N);
   cudaEventRecord(stop);
