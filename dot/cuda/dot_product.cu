@@ -92,7 +92,11 @@ int main(int argc, char **argv) {
   int blockSize = THREADS_PER_BLOCK;
   int gridSize = (int)(double(N) / blockSize) + 1;
 
+  // Warm up to load the kernel
   dot_product<<<gridSize, blockSize>>>(device_a, device_b, device_c, N);
+
+  // L2 cache is not cleared
+
   cudaDeviceSynchronize();
   cudaEventRecord(start);
 
