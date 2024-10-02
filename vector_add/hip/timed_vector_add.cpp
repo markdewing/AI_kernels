@@ -51,7 +51,7 @@ auto calibrate_loop(const RealType *device_a, const RealType *device_b,
   return std::make_pair(1UL, 1.0);
 }
 
-void run_on_gpu(const int N) {
+void run_on_gpu(const int N, int blockSize) {
 
   RealType *host_a;
   RealType *host_b;
@@ -90,9 +90,6 @@ void run_on_gpu(const int N) {
   hipEventCreate(&start);
   hipEventCreate(&stop);
 
-  // int blockSize = 128;
-  // int blockSize = 256;
-  int blockSize = 512;
   // int gridSize = (int)(double(N) / blockSize) + 1;
   // int gridSize = (int)((N + blockSize -1)/ blockSize);
   int gridSize = std::ceil(double(N) / blockSize);
@@ -158,16 +155,19 @@ int main() {
   double start = 2;
   double stop = 8.5;
 
+  int threads_per_block = 512;
+
   int num = 40;
   double delta = (stop - start) / num;
   printf("# HIP\n");
   printf("# HIP compiler version %s\n",__VERSION__);
+  printf("# Threads per block : %d\n",threads_per_block);
   printf("# %10s %10s %12s %16s %16s %10s\n", "N", "nloop", "size(MB)",
          "elapsed time(s)", "kernel time(us)", "BW(GB/s)");
   for (int i = 0; i < num; i++) {
     double val = start + i * delta;
     int n = int(std::pow(10, val));
-    run_on_gpu(n);
+    run_on_gpu(n, threads_per_block);
   }
   return 0;
 }
