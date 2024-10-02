@@ -160,9 +160,8 @@ int main() {
 
   int num = 40;
   double delta = (stop - start) / num;
-  printf("# CUDA\n");
-  // printf("# CUDA compiler version
-  // %d.%d\n",__CUDACC_VER_MAJOR__,__CUDACC_VER_MINOR__);
+  printf("# HIP\n");
+  printf("# HIP compiler version %s\n",__VERSION__);
   printf("# %10s %10s %12s %16s %16s %10s\n", "N", "nloop", "size(MB)",
          "elapsed time(s)", "kernel time(us)", "BW(GB/s)");
   for (int i = 0; i < num; i++) {
