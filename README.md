@@ -7,3 +7,5 @@ General information and links for each framework are located in the [vector_add]
 - [vector_add](vector_add) - The simplest kernel that adds two vectors
 - [dot](dot) - Dot product of two vectors
 - [gemv](gemv) - Matrix-vector multiplication
+- [gemm](gemm) - Matrix-matrix multiplication
+- [latency](latency) - Microbenchmark to measure memory latency
