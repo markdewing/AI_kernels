@@ -9,3 +9,6 @@ General information and links for each framework are located in the [vector_add]
 - [gemv](gemv) - Matrix-vector multiplication
 - [gemm](gemm) - Matrix-matrix multiplication
 - [latency](latency) - Microbenchmark to measure memory latency
+
+
+There are links to additional technical information about GPU topics in the [info](info) directory.
