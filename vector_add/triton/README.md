@@ -9,6 +9,7 @@ Useful info:
 * [Introductory blog post](https://openai.com/index/triton/)
 * [TritonPuzzles](https://github.com/srush/Triton-Puzzles)
 * Blog post: [Demystify OpenAI Triton](https://fkong.tech/posts/2023-04-23-triton-cuda/)
+* Page of [Triton Resources](https://github.com/rkinas/triton-resources)
 
 
 Building Triton:
