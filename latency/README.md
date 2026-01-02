@@ -16,3 +16,15 @@ Other sources of information:
 Other latency benchmark codes:
 
 * https://github.com/RRZE-HPC/gpu-benches/tree/master/gpu-latency
+
+
+## Latency
+
+All measurements are in clock cycles
+
+| Hardware | L1  |  L2  | Main Memory |  L1 size (KiB) |  L2 size (MiB) | Main memory size (GiB) |
+|----------|-----|------|-------------|----------------|----------------|------------------------|
+| RTX 2000 | 39  | 214  | 570         |  128           |   3            |  6                     |
+| 4090     | 40  | 296  | 636         |  128           |   72           | 24                     |
+| 5090     | 44  | 360  | 936         |  128           |   96           | 32                     |
+| GH200    | 40  | 281  | 690         |  256           |   60           | 96                     |
