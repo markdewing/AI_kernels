@@ -34,3 +34,8 @@ All measurements are in clock cycles
 | RTX PRO 6000 | 44  | 352  | 864     |  128           |   128          | 95.6                   |
 | B200     | 40  | 295  | 860         |  256           |   126.5        | 179.1                  |
 | B300     | 39  | 295  | 848         |  256           |   126.5        | 268.6                  |
+
+Notes
+
+* Clocks were not locked during the runs. Locking was tested on some hardware. On the RTX2000, it made a couple of cycles difference. On the B300, locking the graphics clocks to 2032 lowered the largest main memory latency from 848 to 810 cycles.
+* The L1 latency is consistently a few cycles higher than the data from the RRZE-HPC benchmark data.  The difference between the benchmarks has not been isolated yet.
