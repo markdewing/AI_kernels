@@ -1,0 +1,31 @@
+
+set style data lp
+set logscale x
+
+set key left
+
+set xlabel "Array size (KiB)"
+set ylabel "Latency (clock cycles)"
+set title "Latency for Nvidia GPU generations"
+
+set pointsize 0.5
+
+#plot "v100.dat" u ($1/1024):4 title "V100", \
+#     "4090.dat" u ($1/1024):4 title "4090", \
+#     "5090.dat" u ($1/1024):4 title "5090", \
+#     "h100sxm.dat" u ($1/1024):4 title "H100 SXM", \
+#     "gh200.dat" u ($1/1024):4 title "GH200", \
+#     "rtxpro6000.dat" u ($1/1024):4 title "RTX Pro 6000",  \
+#     "b200.dat" u ($1/1024):4 title "B200", \
+#     "b300.dat" u ($1/1024):4 title "B300"
+
+plot "v100.dat" u ($1/1024):4 title "V100" pt 2, \
+     "a100sxm.dat" u ($1/1024):4 title "A100 SXM" pt 6, \
+     "h100sxm.dat" u ($1/1024):4 title "H100 SXM" pt 8, \
+     "b200.dat" u ($1/1024):4 title "B200" pt 4
+
+pause -1
+
+#set term svg
+#set output "nvidia_gpu_latency.svg"
+#replot
