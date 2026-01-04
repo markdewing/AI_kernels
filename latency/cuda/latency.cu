@@ -127,7 +127,7 @@ void run_n(int N) {
   //}
   // std::shuffle(A.begin(), A.end(), gen);
 
-  // Make data layout extremely cache-hostile.
+  // Make data layout more cache-hostile.
   // Makes changes in latency sharper near cache limits.
   const int CL = 32; // Cache line size in ints
   int M = N / CL;
@@ -162,7 +162,9 @@ void run_n(int N) {
   // Warm up run (load the kernel)
   testLatency<<<1, 1>>>(A_d, N, 10, ret_d, cycles_d);
 
-  int nl = 24;
+  check_status(cudaGetLastError(), "kernel launch");
+
+  int nl = 25;
   int nloop = (int)std::pow(2, nl);
   cudaEventRecord(start);
   testLatency<<<1, 1>>>(A_d, N, nloop, ret_d, cycles_d);
@@ -186,16 +188,34 @@ void run_n(int N) {
 }
 
 void sweep_n() {
-  printf("N (bytes)  (KiB)  (MiB)  cycles\n");
-  for (int nl = 6; nl < 27; nl++) {
-    int N = (int)std::pow(2, nl);
-    // printf("N = %d %d K %d M\n",N, N/1024,N/1024/1024);
-    run_n(N);
+  printf("# N (bytes)  (KiB)  (MiB)  cycles\n");
+  // Integer powers of two
+  bool do_powers_of_two = false;
+  if (do_powers_of_two) {
+      for (int nl = 6; nl < 27; nl++) {
+        int N = (int)std::pow(2, nl);
+        run_n(N);
+      }
+  } else {
+      int start_nl = 6;
+      int end_nl = 29;
+      int n_nl = 50;
+      double delta = (end_nl - start_nl)*1.0/n_nl;
+
+      for (int inl = 0; inl < n_nl; inl++) {
+        double nl = start_nl + inl * delta;
+        int N = (int)std::pow(2, nl);
+        run_n(N);
+      }
+
   }
 }
+
 int main() {
 
-  // sweep_nloop();
+  //check_status(cudaFuncSetAttribute(testLatency, cudaFuncAttributePreferredSharedMemoryCarveout, 0), "set func attr");
+
+  //sweep_nloop();
   sweep_n();
   return 0;
 }
