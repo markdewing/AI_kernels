@@ -372,9 +372,23 @@ int main(int argc, char **argv) {
       use_float = true;
   }
 
+  cudaDeviceProp prop;
+  check_status(cudaGetDeviceProperties(&prop, 0), "get properties");
+
+
   int num = 40;
   double delta = (stop - start) / num;
   printf("# CUDA\n");
+  printf("# Device name: %s\n",prop.name);
+  printf("# SM count: %d\n",prop.multiProcessorCount);
+  printf("# Clock (kHZ) : %d\n",prop.clockRate);
+  printf("# Mem clock (kHZ) : %d\n",prop.memoryClockRate);
+  printf("# Mem width (bits) : %d\n",prop.memoryBusWidth);
+  // The transfers per clock is going to be 2, 4, 8, etc.
+  printf("# Mem BW (GB/s) : %g * # transfers/clock\n",prop.memoryBusWidth * prop.memoryClockRate / 8e6 );
+  printf("# L2 cache (bytes) : %d\n",prop.l2CacheSize);
+  printf("# Total global memory (bytes) : %lu\n",prop.totalGlobalMem);
+
   printf("# CUDA compiler version %d.%d\n", __CUDACC_VER_MAJOR__,
          __CUDACC_VER_MINOR__);
   printf("# Threads per block : %d\n",threads_per_block);
